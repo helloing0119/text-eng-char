@@ -4,16 +4,17 @@ import pandas as pd
 import os
 
 class DataGenerator:
-    def __init__(self, csv_path, csv_img_col, csv_label_col, img_dir, num_classes, seed=None):
-        self.configure(csv_path, csv_img_col, csv_label_col, img_dir, num_classes, seed)
+    def __init__(self, csv_path, csv_img_col, csv_label_col, img_dir, num_classes, seed=None, is_skip=False):
+        self.configure(csv_path, csv_img_col, csv_label_col, img_dir, num_classes, seed, is_skip)
     
-    def configure(self, csv_path, csv_img_col, csv_label_col, img_dir, num_classes, seed=None):
+    def configure(self, csv_path, csv_img_col, csv_label_col, img_dir, num_classes, seed=None, is_skip=False):
         self.csv_path = csv_path
         self.csv_img_col = csv_img_col
         self.csv_label_col = csv_label_col
         self.img_dir = img_dir
         self.num_classes = num_classes
 
+        self.is_skip = is_skip
         self.dataset = None
         self.seed = seed
         self.img_paths = []
@@ -35,8 +36,12 @@ class DataGenerator:
 
         # get all images from csv label data
         for index, row in dataframe.iterrows():
+            if self.is_skip and len(row[_csv_label_col]) > 1:
+                continue
+            if self.is_skip and random.random()>0.2:
+                continue
             img_fname = row[_csv_img_col]
-            label = row[_csv_label_col]
+            label = ord(row[_csv_label_col])
             img_path = os.path.join(_img_dir, img_fname)
             img_paths.append(img_path)
             labels.append(label)
@@ -48,10 +53,12 @@ class DataGenerator:
 
     def generate_image_tensor(self, img_path):
         img = tf.io.read_file(img_path)
-        img = tf.image.decode_png(img, channels=1)
+        img = tf.image.decode_png(img, channels=3)
+        img = tf.image.rgb_to_grayscale(img)
         img = tf.image.convert_image_dtype(img, tf.float32)
         img = tf.image.resize(img, [128, 128])
-        return img
+        img = tf.expand_dims(img, axis=3)
+        return img / 255.0
     
     def _getSeed(self, seed=None):
         if seed == None:
@@ -70,8 +77,8 @@ class DataGenerator:
         
         image_tensor = [self.generate_image_tensor(img_path) for img_path in _img_paths]
         label_tensor = tf.one_hot(_labels, _num_classes)
-        dataset = tf.data.Dataset.from_tensor_slices((image_tensor, label_tensor))
 
+        dataset = tf.data.Dataset.from_tensor_slices((image_tensor, label_tensor))
         return dataset.shuffle(buffer_size=len(_img_paths), seed=_seed)
     
     def generate_dataset(self, labels=None, img_paths=None, seed=None, force_regenerate=False):
@@ -82,6 +89,6 @@ class DataGenerator:
         _seed = self._getSeed(seed)
 
         if self.dataset == None or force_regenerate:
-            self.dataset = self._create_dataset(_img_paths, _labels, _seed)
+            self.dataset = self._create_dataset(_img_paths, _labels, seed=_seed)
 
         return self.dataset

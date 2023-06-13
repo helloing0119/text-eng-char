@@ -10,30 +10,16 @@ class EngCharLayer(tf.keras.Model):
     if strides == 2:
       self.pool = layers.MaxPool2D()
 
-    self.dw_conv = layers.DepthwiseConv2D((3, 3), strides=strides, padding="same")
-    self.conv = layers.Conv2D(filters, (1, 1), strides=(1, 1))
+    self.max_pool = layers.MaxPool2D((2, 2), input_shape=(128, 128, 1, 1), padding="same")
+    self.conv = layers.Conv2D(filters, (3, 3), input_shape=(128, 128, 1, 1), padding="same")
 
-    self.norm_1 = layers.BatchNormalization()
-    self.norm_2 = layers.BatchNormalization()
 
     self.activation = layers.ReLU()
   
   def call(self, x_input):
-    x = self.dw_conv(x_input)
-    x = self.norm_1(x)
-    x = self.conv(x)
-    x = self.norm_2(x)
+    x = self.conv(x_input)
+    x = self.max_pool(x)
     
-    if self.strides == 2:
-      x_input = self.pool(x_input)
-    
-    padding = self.filters - x_input.shape[-1]
-    
-    if padding != 0:
-      padding_values = [[0, 0], [0, 0], [0, 0], [0, padding]]
-      x_input = tf.pad(x_input, padding_values)
-    
-    x = x + x_input
     x = self.activation(x)
 
     return x
