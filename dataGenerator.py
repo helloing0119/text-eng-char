@@ -57,7 +57,8 @@ class DataGenerator:
         img = tf.image.rgb_to_grayscale(img)
         img = tf.image.convert_image_dtype(img, tf.float32)
         img = tf.image.resize(img, [128, 128])
-        img = tf.expand_dims(img, axis=3)
+        # if self.is_skip:
+        #     img = tf.expand_dims(img, axis=3)
         return img / 255.0
     
     def _getSeed(self, seed=None):
