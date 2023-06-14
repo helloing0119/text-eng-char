@@ -27,9 +27,9 @@ if __name__ == "__main__":
   Init configuration
   '''
   # Hyper parmas & customizable arugments
-  parser.add_argument('--hw-accelerator', default="cpu", help='hw_accelerator cpu or gpu' )
   parser.add_argument('--img-path', default="./test_dataset/Sample050/img050-00009.png", help='img path to predict with model')
   parser.add_argument('--model-path', default="./models", help='model directory')
+  parser.add_argument('--hw-accelerator', default="cpu", help='hw_accelerator cpu or gpu' )
 
   opts = parser.parse_args()
 
