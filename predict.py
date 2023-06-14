@@ -10,7 +10,7 @@ def generate_image_tensor(img_path):
     img = tf.image.decode_png(img, channels=3)
     img = tf.image.rgb_to_grayscale(img)
     img = tf.image.convert_image_dtype(img, tf.float32)
-    img = tf.image.resize(img, [128, 128])
+    img = tf.image.resize(img, [64, 64])
     return img / 255.0
 
 def get_label(num):

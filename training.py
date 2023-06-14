@@ -9,30 +9,39 @@ import tensorflow as tf
 from dataGenerator import DataGenerator
 from engCharModel import EngCharModel
   
-def train(epochs, model, train_dataset, save_path, optimizer, test_dataset, test_size):
+def train(epochs, model, train_dataset, save_path, optimizer, test_dataset, test_size, num_classes):
   model.compile(optimizer=optimizer,
               loss='categorical_crossentropy',
               metrics=['accuracy'])
+
     
-  for epoch in range(epochs):
-    epoch_count = f"0{epoch + 1}/{epochs}" if epoch < 9 else f"{epoch + 1}/{epochs}"
-    print('\r', 'Fit @ Epoch', epoch_count)
-    
-    # fit model with every data in train_dataset, random ordered
-    current_dataset = train_dataset.shuffle(buffer_size=len(train_dataset))
-    model.fit(current_dataset.batch(1), epochs=1)
-
-    # test with randomly selected {test_size} of data
-    current_testset = test_dataset.shuffle(buffer_size=len(test_dataset))
-    test_dataset_subset = current_testset.batch(1).take(test_size)
-
-    test_time = time.time()
-    eval_loss, eval_accuracy = model.evaluate(test_dataset_subset)
-
-    print('\r', 'Test @ Epoch', epoch_count,
-          '| Loss:', f"{eval_loss:.4f}", '| Accuracy:', f"{eval_accuracy:.4f}",
-          '| Test Time:', f"{time.time() - test_time:.2f}")
+  # fit model with every data in train_dataset
+  for train_size, _ in enumerate(train_dataset):
+     pass
   
+  # train_dataset=train_dataset.repeat()
+  # for epoch in range(num_classes):
+  #   print('\r', 'Epoch : ', f"{epoch+1:4d}")
+  #   current_dataset=train_dataset.take(math.floor(train_size/num_classes+1)).batch(1)
+  #   model.fit(current_dataset, epochs=1, verbose=1)
+
+  real_dataset=train_dataset.repeat().take(train_size).shuffle(buffer_size=train_size).repeat()
+  # for epoch in range(epochs):
+  # print('\r', 'Epoch : ', f"{epoch+1:4d}")
+  current_dataset=real_dataset.take(math.ceil(train_size)).batch(epochs)
+  model.fit(current_dataset, epochs=epochs, verbose=1)
+
+  # test with randomly selected {test_size} of data
+  current_testset = test_dataset.shuffle(buffer_size=len(test_dataset))
+  test_dataset_subset = current_testset.batch(1).take(test_size)
+
+  test_time = time.time()
+  eval_loss, eval_accuracy = model.evaluate(test_dataset_subset)
+
+  print('\r', 'Test size : ', test_size,
+        '| Loss:', f"{eval_loss:.4f}", '| Accuracy:', f"{eval_accuracy:.4f}",
+        '| Test Time:', f"{time.time() - test_time:.2f}")
+
   model.save(save_path)
 
 def fit_param(param, min, max):
@@ -107,11 +116,12 @@ if __name__ == "__main__":
     csv_path=csv_path, csv_img_col=csv_img_col, csv_label_col=csv_label_col,
     img_dir=img_dir, num_classes=num_classes, seed=seed)
   
+  dataset = generator.generate_dataset()
+  
   test_generator = DataGenerator(
     csv_path=test_csv_path, csv_img_col=csv_img_col, csv_label_col=csv_label_col,
     img_dir=test_img_dir, num_classes=num_classes, seed=seed, is_skip=True)
-  
-  dataset = generator.generate_dataset()
   testset = test_generator.generate_dataset()
 
-  train(epochs, model, dataset, save_path, optimizer, testset, test_size)
+
+  train(epochs, model, dataset, save_path, optimizer, testset, test_size, num_classes)

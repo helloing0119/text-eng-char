@@ -21,7 +21,7 @@ pip install tensorflow==2.9.0 pandas
 - `test_dataset/modify_image.py` : modify test dataset, adding noise, tilting image, transfering center
 
 ## Recomended setting
---epoch 50 --use-random-seed --test-len 1000
+--epoch 50 --use-random-seed --test-len 2000
 
 ## Usage (predict.py)
 ```

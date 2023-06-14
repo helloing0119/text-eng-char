@@ -56,7 +56,7 @@ class DataGenerator:
         img = tf.image.decode_png(img, channels=3)
         img = tf.image.rgb_to_grayscale(img)
         img = tf.image.convert_image_dtype(img, tf.float32)
-        img = tf.image.resize(img, [128, 128])
+        img = tf.image.resize(img, [64, 64])
         # if self.is_skip:
         #     img = tf.expand_dims(img, axis=3)
         return img / 255.0
@@ -80,7 +80,7 @@ class DataGenerator:
         label_tensor = tf.one_hot(_labels, _num_classes)
 
         dataset = tf.data.Dataset.from_tensor_slices((image_tensor, label_tensor))
-        return dataset.shuffle(buffer_size=len(_img_paths), seed=_seed)
+        return dataset
     
     def generate_dataset(self, labels=None, img_paths=None, seed=None, force_regenerate=False):
         if len(self.img_paths) == 0 or len(self.labels) == 0:
